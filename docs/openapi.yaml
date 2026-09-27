@@ -1,0 +1,145 @@
+openapi: 3.1.0
+info:
+  title: OrderFlow Order API
+  version: 1.0.0
+paths:
+  /api/v1/orders:
+    post:
+      summary: Create an order idempotently
+      operationId: createOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+        - name: X-Correlation-Id
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            example:
+              items:
+                - productId: 22222222-2222-4222-8222-222222222221
+                  quantity: 2
+                - productId: 22222222-2222-4222-8222-222222222222
+                  quantity: 1
+      responses:
+        '201':
+          description: Order created, or the result of an equivalent request replayed
+          headers:
+            Location:
+              required: true
+              schema:
+                type: string
+            X-Correlation-Id:
+              required: true
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Missing idempotency key or invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Missing or invalid access token
+        '403':
+          description: Token does not grant the CUSTOMER role
+        '409':
+          description: Idempotency key reused with different normalized content
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Every nonexistent or inactive product is reported together
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Problem'
+                  - type: object
+                    properties:
+                      invalidProductIds:
+                        type: array
+                        items:
+                          type: string
+                          format: uuid
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateOrderRequest:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [productId, quantity]
+            properties:
+              productId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+                minimum: 1
+                maximum: 10000
+    Order:
+      type: object
+      additionalProperties: false
+      required: [orderId, status, currency, totalAmount, createdAt]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: INVENTORY_PENDING
+        currency:
+          type: string
+          const: BRL
+        totalAmount:
+          type: number
+          multipleOf: 0.01
+        createdAt:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
