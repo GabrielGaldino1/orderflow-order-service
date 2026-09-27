@@ -21,6 +21,6 @@ class PostgresMigrationIT {
 				"select count(*) from flyway_schema_history where success = true",
 				Integer.class);
 
-		assertThat(appliedMigrations).isEqualTo(1);
+		assertThat(appliedMigrations).isEqualTo(2);
 	}
 }
