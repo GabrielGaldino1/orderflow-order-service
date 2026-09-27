@@ -1,0 +1,2 @@
+-- F02 intentionally creates no business tables.
+-- The Flyway history entry proves that order-service owns and can migrate its database.

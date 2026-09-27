@@ -1,13 +1,22 @@
 # OrderFlow Order Service
 
-Spring Boot application responsible for the public order API and orchestration of the OrderFlow saga.
+Spring Boot application that will expose the public order API and orchestrate the OrderFlow saga.
 
-## Planned foundation
+## F02 foundation
 
 - Java 17 and Maven Wrapper.
-- Spring Boot with Web, Validation, Actuator, Data JPA, and PostgreSQL.
-- Liveness and readiness endpoints.
-- Database migrations and Testcontainers integration tests.
+- Spring Boot Web MVC, Validation, Actuator, Data JPA, PostgreSQL, Flyway, and Kafka client.
+- Owned PostgreSQL database configured only through environment variables.
+- Liveness at `/actuator/health/liveness` and readiness at `/actuator/health/readiness`.
+- Unit context test with H2 and PostgreSQL migration integration test with Testcontainers.
 
-Application generation is intentionally deferred to the next Phase 1 block.
+No order endpoint, saga behavior, or Kafka publication is implemented in F02.
+
+## Build and test
+
+```powershell
+./mvnw.cmd clean verify
+```
+
+The `verify` phase requires a Docker-compatible runtime for the Testcontainers test. Local runtime variables and orchestration commands are documented in `orderflow-platform`.
 
