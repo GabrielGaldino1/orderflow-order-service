@@ -15,6 +15,8 @@ class OpenApiContractTest {
 
         assertThat(contract)
                 .contains("/api/v1/orders:")
+                .contains("/api/v1/orders/{orderId}:")
+                .contains("/api/v1/orders/{orderId}/history:")
                 .contains("Idempotency-Key")
                 .contains("'201':")
                 .contains("Location:")
@@ -23,6 +25,9 @@ class OpenApiContractTest {
                 .contains("'403':")
                 .contains("'409':")
                 .contains("'422':")
+                .contains("OrderDetails")
+                .contains("OrderHistory")
+                .contains("Order does not exist or is not visible")
                 .contains("INVENTORY_PENDING")
                 .contains("BRL");
     }
