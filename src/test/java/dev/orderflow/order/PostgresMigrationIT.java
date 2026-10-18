@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+@SpringBootTest(properties = "orderflow.outbox.scheduling-enabled=false")
 class PostgresMigrationIT {
 
 	@Autowired
@@ -21,6 +21,6 @@ class PostgresMigrationIT {
 				"select count(*) from flyway_schema_history where success = true",
 				Integer.class);
 
-		assertThat(appliedMigrations).isEqualTo(2);
+		assertThat(appliedMigrations).isEqualTo(3);
 	}
 }

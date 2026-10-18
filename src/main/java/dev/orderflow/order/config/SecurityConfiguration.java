@@ -32,6 +32,7 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/metrics/**").hasRole("OPERATOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/**").hasAnyRole("CUSTOMER", "OPERATOR")
                         .anyRequest().denyAll())
