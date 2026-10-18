@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import dev.orderflow.order.application.IdempotencyConflictException;
 import dev.orderflow.order.application.InvalidOrderRequestException;
 import dev.orderflow.order.application.InvalidProductsException;
+import dev.orderflow.order.application.OrderNotFoundException;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @RestControllerAdvice
@@ -24,6 +25,11 @@ public class ApiExceptionHandler {
 
     public ApiExceptionHandler(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    ResponseEntity<ProblemDetail> orderNotFound(OrderNotFoundException exception) {
+        return problem(HttpStatus.NOT_FOUND, "Order not found", exception.getMessage(), "order-not-found", Map.of());
     }
 
     @ExceptionHandler(IdempotencyConflictException.class)

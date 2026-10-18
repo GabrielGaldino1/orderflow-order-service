@@ -82,7 +82,86 @@ paths:
                         items:
                           type: string
                           format: uuid
+  /api/v1/orders/{orderId}:
+    get:
+      summary: Get the current state and immutable item snapshot of an order
+      operationId: getOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Order visible to its owner or an operator
+          headers:
+            X-Correlation-Id:
+              required: true
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetails'
+        '401':
+          description: Missing or invalid access token
+        '403':
+          description: Token grants neither CUSTOMER nor OPERATOR
+        '404':
+          description: Order does not exist or is not visible to the authenticated customer
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /api/v1/orders/{orderId}/history:
+    get:
+      summary: Get the immutable, sequence-ordered transition history of an order
+      operationId: getOrderHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Ordered transition history visible to the owner or an operator
+          headers:
+            X-Correlation-Id:
+              required: true
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderHistory'
+        '401':
+          description: Missing or invalid access token
+        '403':
+          description: Token grants neither CUSTOMER nor OPERATOR
+        '404':
+          description: Order does not exist or is not visible to the authenticated customer
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http
@@ -130,6 +209,79 @@ components:
         createdAt:
           type: string
           format: date-time
+    OrderDetails:
+      type: object
+      additionalProperties: false
+      required: [orderId, status, currency, totalAmount, createdAt, items]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        currency:
+          type: string
+          const: BRL
+        totalAmount:
+          type: number
+          multipleOf: 0.01
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+    OrderItem:
+      type: object
+      additionalProperties: false
+      required: [productId, productName, unitPrice, quantity, lineTotal]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        unitPrice:
+          type: number
+          multipleOf: 0.01
+        quantity:
+          type: integer
+          minimum: 1
+        lineTotal:
+          type: number
+          multipleOf: 0.01
+    OrderHistory:
+      type: object
+      additionalProperties: false
+      required: [orderId, transitions]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        transitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderTransition'
+    OrderTransition:
+      type: object
+      additionalProperties: false
+      required: [transitionId, sequenceNumber, status, occurredAt]
+      properties:
+        transitionId:
+          type: string
+          format: uuid
+        sequenceNumber:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        occurredAt:
+          type: string
+          format: date-time
+    OrderStatus:
+      type: string
+      enum: [INVENTORY_PENDING, PAYMENT_PENDING, CANCELLATION_PENDING, CONFIRMED, CANCELLED]
     Problem:
       type: object
       required: [type, title, status, detail]

@@ -29,6 +29,16 @@ The development snapshot contains two active products and one inactive product:
 | `22222222-2222-4222-8222-222222222222` | Teclado mecânico | BRL 399.00 | yes |
 | `22222222-2222-4222-8222-222222222223` | Mouse descontinuado | BRL 89.90 | no |
 
+## F04 order queries
+
+`GET /api/v1/orders/{orderId}` returns the current state and immutable item price snapshots.
+`GET /api/v1/orders/{orderId}/history` returns transitions ordered by their sequence number.
+
+Customers can read only their own orders. Both an unknown order and another customer's order return
+the same `404` response to avoid disclosing existence. Users with the `OPERATOR` realm role can read
+any order. Both endpoints propagate `X-Correlation-Id` and record operation, outcome, and latency
+metrics. The response schemas and access rules are documented in [`docs/openapi.yaml`](docs/openapi.yaml).
+
 ## Build and test
 
 ```powershell
