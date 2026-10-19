@@ -18,8 +18,7 @@ Spring Boot application that exposes the public order API and orchestrates the O
 
 Order creation validates the owned product snapshot, consolidates repeated products, snapshots BRL
 prices, calculates the total, and commits the order, initial history entry, and
-`InventoryReservationRequested.v1` outbox intent atomically. Publishing the outbox is intentionally
-deferred to F05.
+`InventoryReservationRequested.v1` outbox intent atomically.
 
 The development snapshot contains two active products and one inactive product:
 
@@ -38,6 +37,14 @@ Customers can read only their own orders. Both an unknown order and another cust
 the same `404` response to avoid disclosing existence. Users with the `OPERATOR` realm role can read
 any order. Both endpoints propagate `X-Correlation-Id` and record operation, outcome, and latency
 metrics. The response schemas and access rules are documented in [`docs/openapi.yaml`](docs/openapi.yaml).
+
+## F05 transactional outbox
+
+A scheduled publisher safely claims pending rows with `FOR UPDATE SKIP LOCKED`, sends each message
+with the order ID as Kafka key, waits for the broker acknowledgement, and only then records
+`published_at`. Expired claims are retried, so the delivery guarantee is at least once and consumers
+must remain idempotent. Actuator metrics expose backlog size, oldest-message age, attempts, failures,
+and publication latency. Payloads and credentials are excluded from publisher logs.
 
 ## Build and test
 

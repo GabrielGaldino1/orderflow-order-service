@@ -27,7 +27,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+@SpringBootTest(properties = "orderflow.outbox.scheduling-enabled=false")
 class OrderCreationIT {
 
     private static final UUID PRODUCT_A = UUID.fromString("22222222-2222-4222-8222-222222222221");
